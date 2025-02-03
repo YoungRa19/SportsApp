@@ -1,7 +1,5 @@
-
 import 'package:flutter/material.dart';
 import 'package:sportsapp/data/sports.dart';
-
 
 class Sports extends StatefulWidget {
   const Sports({super.key});
@@ -86,7 +84,7 @@ class _SportsState extends State<Sports> {
 
                   _nameController.clear();
                   _playersController.clear();
-                  Navigator.pop(context); // Cerrar diálogo
+                  Navigator.pop(context);
                 } else {
                   setState(() {
                     _validateName = newSportName.isEmpty;
@@ -95,6 +93,26 @@ class _SportsState extends State<Sports> {
                 }
               },
               child: Text("Aceptar", style: TextStyle(color: Colors.blue)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void showInfoDialog(BuildContext context, Sport sport) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Detalles de ${sport.name}"),
+          content: Text("Número de jugadores: ${sport.numPlayers}"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Cerrar", style: TextStyle(color: Colors.blue)),
             ),
           ],
         );
@@ -154,7 +172,7 @@ class _SportsState extends State<Sports> {
                         children: [
                           Expanded(
                             child: Text(
-                              "${sports[idx].name} - ${sports[idx].numPlayers} jugadores",
+                              sports[idx].name,
                               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -176,7 +194,13 @@ class _SportsState extends State<Sports> {
                                 icon: Icon(Icons.delete),
                                 color: Colors.red,
                               ),
-
+                              IconButton(
+                                onPressed: () {
+                                  showInfoDialog(context, sports[idx]);
+                                },
+                                icon: Icon(Icons.info),
+                                color: Colors.grey,
+                              ),
                             ],
                           ),
                         ],
