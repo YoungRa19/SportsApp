@@ -12,12 +12,15 @@ class Sports extends StatefulWidget {
 
 class _SportsState extends State<Sports> {
   List<Sport> sports = [];
-  TextEditingController _textEditing = TextEditingController();
-  bool _validate = false;
+  TextEditingController _nameController = TextEditingController();
+  TextEditingController _playersController = TextEditingController();
+  bool _validateName = false;
+  bool _validatePlayers = false;
 
   @override
   void dispose() {
-    _textEditing.dispose();
+    _nameController.dispose();
+    _playersController.dispose();
     super.dispose();
   }
 
@@ -25,54 +28,69 @@ class _SportsState extends State<Sports> {
     showProcess(context);
   }
 
-
   void showProcess(BuildContext context, {Sport? sport, int? id}) {
     String title = sport == null ? "Nuevo deporte" : "Editar ${sport.name}";
-    _textEditing.text = sport?.name ?? "";  // Asigna el valor actual si existe
+    _nameController.text = sport?.name ?? "";
+    _playersController.text = sport?.numPlayers.toString() ?? "";
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
           title: Text(title),
-          content: TextField(
-            controller: _textEditing,
-            onChanged: (data) {
-              setState(() {
-                _validate = data.isEmpty;
-              });
-            },
-            decoration: InputDecoration(
-              labelText: 'Nombre del deporte',
-              errorText: _validate ? "No puede ser un valor vacío" : null,
-            ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: InputDecoration(
+                  labelText: 'Nombre del deporte',
+                  errorText: _validateName ? "No puede estar vacío" : null,
+                ),
+              ),
+              SizedBox(height: 10),
+              TextField(
+                controller: _playersController,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  labelText: 'Número de jugadores',
+                  errorText: _validatePlayers ? "Debe ser un número válido" : null,
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
               onPressed: () {
-                _textEditing.clear();
+                _nameController.clear();
+                _playersController.clear();
                 Navigator.pop(context);
               },
               child: Text("Cancelar", style: TextStyle(color: Colors.red)),
             ),
             TextButton(
               onPressed: () {
-                String newSportName = _textEditing.text.trim();
-                if (newSportName.isNotEmpty) {
+                String newSportName = _nameController.text.trim();
+                int? newPlayers = int.tryParse(_playersController.text.trim());
+
+                if (newSportName.isNotEmpty && newPlayers != null && newPlayers > 0) {
                   setState(() {
                     if (sport != null && id != null) {
                       // Editar deporte existente
-                      sports[id] = Sport(name: newSportName);
+                      sports[id] = Sport(name: newSportName, numPlayers: newPlayers);
                     } else {
                       // Agregar nuevo deporte
-                      sports.add(Sport(name: newSportName));
+                      sports.add(Sport(name: newSportName, numPlayers: newPlayers));
                     }
                   });
 
+                  _nameController.clear();
+                  _playersController.clear();
                   Navigator.pop(context); // Cerrar diálogo
                 } else {
                   setState(() {
-                    _validate = true;
+                    _validateName = newSportName.isEmpty;
+                    _validatePlayers = newPlayers == null || newPlayers <= 0;
                   });
                 }
               },
@@ -84,8 +102,6 @@ class _SportsState extends State<Sports> {
     );
   }
 
-
-
   void delete(int id) {
     if (id >= 0 && id < sports.length) {
       setState(() {
@@ -93,9 +109,6 @@ class _SportsState extends State<Sports> {
       });
     }
   }
-
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -119,12 +132,11 @@ class _SportsState extends State<Sports> {
           children: [
             if (sports.isEmpty)
               Center(
-                    child: Text(
-                      "No hay datos disponibles",
-                      style: TextStyle(
-                          color: Colors.grey, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+                child: Text(
+                  "No hay datos disponibles",
+                  style: TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
+                ),
+              ),
             if (sports.isNotEmpty)
               Expanded(
                 child: ListView.builder(
@@ -142,7 +154,7 @@ class _SportsState extends State<Sports> {
                         children: [
                           Expanded(
                             child: Text(
-                              sports[idx].name,
+                              "${sports[idx].name} - ${sports[idx].numPlayers} jugadores",
                               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                             ),
                           ),
@@ -150,7 +162,8 @@ class _SportsState extends State<Sports> {
                             children: [
                               IconButton(
                                 onPressed: () {
-                                  _textEditing.text = sports[idx].name; // Asigna el valor antes de abrir
+                                  _nameController.text = sports[idx].name;
+                                  _playersController.text = sports[idx].numPlayers.toString();
                                   showProcess(context, sport: sports[idx], id: idx);
                                 },
                                 icon: Icon(Icons.edit),
@@ -163,6 +176,7 @@ class _SportsState extends State<Sports> {
                                 icon: Icon(Icons.delete),
                                 color: Colors.red,
                               ),
+
                             ],
                           ),
                         ],
@@ -170,7 +184,7 @@ class _SportsState extends State<Sports> {
                     );
                   },
                 ),
-              )
+              ),
           ],
         ),
       ),

@@ -1,7 +1,7 @@
 class Sport {
   String name;
-  int players;
+  int numPlayers;
   Sport({
-    required this.name, required this.players
+    required this.name, required this.numPlayers
   });
 }
