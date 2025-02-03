@@ -26,84 +26,65 @@ class _SportsState extends State<Sports> {
   }
 
 
-  showProcess(BuildContext context, {Sport? sport, int? id}) {
+  void showProcess(BuildContext context, {Sport? sport, int? id}) {
     String title = sport == null ? "Nuevo deporte" : "Editar ${sport.name}";
-    return showDialog(
-        context: context,
-        builder: (
-            context,
-            ) {
-          return StatefulBuilder(
-              builder: (BuildContext context, StateSetter setState) {
-                return AlertDialog(
-                  actionsAlignment: MainAxisAlignment.spaceEvenly,
-                  title: Text(title),
-                  content: Wrap(
-                    alignment: WrapAlignment.center,
-                    children: [
-                      TextField(
-                        controller: _textEditing,
-                        onChanged: (data) {
-                          setState(() {
-                            _validate = data.isEmpty;
-                          });
-                        },
-                        decoration: InputDecoration(
-                            labelText: 'Nombre del deporte',
-                            errorText:
-                            _validate ? "No puede ser un valor vacío" : null,
-                            errorStyle: TextStyle(color: Colors.red)),
-                      )
-                    ],
-                  ),
-                  actions: [
-                    TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _validate = false;
-                          });
-                          _textEditing.clear();
-                          Navigator.pop(context);
-                        },
-                        child: Text(
-                          "Cancelar",
-                          style: TextStyle(color: Colors.red),
-                        )),
-                    TextButton(
-                        onPressed: () {
-                          if (_textEditing.value.text.isNotEmpty) {
-                            if (sport != null && id != null && id >= 0 && id < sports.length) {
-                              setState(() {
-                                sports[id] = Sport(name: _textEditing.value.text);
-                              });
-                            }
+    _textEditing.text = sport?.name ?? "";  // Asigna el valor actual si existe
 
-                            else {
-                              _textEditing.clear();
-                              Navigator.pop(context);
-                              setState(() {
-                                sports.add(Sport(name: _textEditing.value.text));
-                                _validate = false;
-                              });
-                            }
-
-                          } else {
-                            setState(() {
-                              _validate = _textEditing.text.isEmpty;
-                            });
-                          }
-                        },
-                        child: Text(
-                          "Aceptar",
-                          style: TextStyle(color: Colors.blue),
-                        ))
-                  ],
-                );
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text(title),
+          content: TextField(
+            controller: _textEditing,
+            onChanged: (data) {
+              setState(() {
+                _validate = data.isEmpty;
               });
-        });
+            },
+            decoration: InputDecoration(
+              labelText: 'Nombre del deporte',
+              errorText: _validate ? "No puede ser un valor vacío" : null,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                _textEditing.clear();
+                Navigator.pop(context);
+              },
+              child: Text("Cancelar", style: TextStyle(color: Colors.red)),
+            ),
+            TextButton(
+              onPressed: () {
+                String newSportName = _textEditing.text.trim();
+                if (newSportName.isNotEmpty) {
+                  setState(() {
+                    if (sport != null && id != null) {
+                      // Editar deporte existente
+                      sports[id] = Sport(name: newSportName);
+                    } else {
+                      // Agregar nuevo deporte
+                      sports.add(Sport(name: newSportName));
+                    }
+                  });
 
-
+                  Navigator.pop(context); // Cerrar diálogo
+                } else {
+                  setState(() {
+                    _validate = true;
+                  });
+                }
+              },
+              child: Text("Aceptar", style: TextStyle(color: Colors.blue)),
+            ),
+          ],
+        );
+      },
+    );
   }
+
+
 
   void delete(int id) {
     if (id >= 0 && id < sports.length) {
@@ -112,6 +93,7 @@ class _SportsState extends State<Sports> {
       });
     }
   }
+
 
 
 
@@ -146,7 +128,6 @@ class _SportsState extends State<Sports> {
             if (sports.isNotEmpty)
               Expanded(
                 child: ListView.builder(
-                  shrinkWrap: true,
                   itemCount: sports.length,
                   itemBuilder: (context, idx) {
                     return Container(
@@ -162,18 +143,16 @@ class _SportsState extends State<Sports> {
                           Expanded(
                             child: Text(
                               sports[idx].name,
-                              style: TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
+                              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                             ),
                           ),
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               IconButton(
                                 onPressed: () {
-                                  _textEditing.text = sports[idx].name;
+                                  _textEditing.text = sports[idx].name; // Asigna el valor antes de abrir
                                   showProcess(context, sport: sports[idx], id: idx);
-                                  },
+                                },
                                 icon: Icon(Icons.edit),
                                 color: Colors.orange,
                               ),
@@ -191,7 +170,7 @@ class _SportsState extends State<Sports> {
                     );
                   },
                 ),
-              ),
+              )
           ],
         ),
       ),
